@@ -1,0 +1,16 @@
+# Ignore large video files
+outputs/*.mp4
+outputs/*.mp3
+temp/*
+
+# Ignore sensitive files
+.env
+*.key
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore system files
+.DS_Store
