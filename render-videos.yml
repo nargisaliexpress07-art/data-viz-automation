@@ -1,0 +1,60 @@
+name: Render Data Visualization Videos
+
+on:
+  push:
+    paths:
+      - 'data/render_queue/*.json'
+      - 'src/renderer.py'
+  workflow_dispatch:
+
+jobs:
+  render-batch:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          pip install matplotlib numpy pandas
+      
+      - name: Create output directories
+        run: |
+          mkdir -p outputs
+      
+      - name: 🎥 Run Professional Renderer
+        run: |
+          python3 src/renderer.py
+      
+      - name: 🛡️ Quality Gate (Check File Size)
+        run: |
+          echo "Checking video quality..."
+          ls -lh outputs/
+          
+          # Count MP4 files
+          count=$(find outputs/ -name "*.mp4" | wc -l)
+          if [ "$count" -eq "0" ]; then
+            echo "❌ CRITICAL FAILURE: No videos were rendered!"
+            exit 1
+          fi
+          
+          # Check for 'sloppy' small files (under 1MB)
+          # A good 1080p video should be 2MB-10MB
+          find outputs/ -name "*.mp4" -size -1M -exec echo "❌ FAILURE: Video {} is too small (Glitch detected)" \; -exec exit 1 \;
+          
+          echo "✅ Quality Check Passed: Videos are professional size."
+
+      - name: Upload to R2 (Artifacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: rendered-videos
+          path: outputs/*.mp4
+          retention-days: 7
