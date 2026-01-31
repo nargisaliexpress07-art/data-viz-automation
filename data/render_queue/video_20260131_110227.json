@@ -1,5 +1,5 @@
 {
-  "id": "20260131_105451",
+  "id": "20260131_110227",
   "chart_type": "line",
   "title": "US Unemployment Rate",
   "data": {
@@ -21,6 +21,6 @@
     ]
   },
   "source": "Bureau of Labor Statistics",
-  "analysis": "The unemployment rate in the U.S. rose from 4.0% to 4.1%. This means a few more people are struggling to find jobs, which can make things tougher for families and the economy overall.",
-  "created_at": "2026-01-31T10:54:51.414076"
+  "analysis": "The US unemployment rate increased from 4.0% to 4.1%. This means slightly more people are out of work, which can make finding jobs a bit tougher for those looking.",
+  "created_at": "2026-01-31T11:02:27.619307"
 }
