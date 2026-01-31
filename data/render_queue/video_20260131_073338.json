@@ -1,0 +1,26 @@
+{
+  "id": "20260131_073338",
+  "chart_type": "line",
+  "title": "US Unemployment Rate",
+  "data": {
+    "labels": [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun"
+    ],
+    "values": [
+      3.7,
+      3.9,
+      3.8,
+      3.9,
+      4.0,
+      4.1
+    ]
+  },
+  "source": "Bureau of Labor Statistics",
+  "analysis": "The US unemployment rate rose from 4.0% to 4.1%. This means a few more people are struggling to find jobs, which can affect spending and the overall economy.",
+  "created_at": "2026-01-31T07:33:38.424848"
+}
