@@ -1,0 +1,176 @@
+name: Render Data Visualization Videos
+
+on:
+  push:
+    paths:
+      - 'data/render_queue/*.json'
+  workflow_dispatch:
+
+jobs:
+  render-batch:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      
+      - name: Install Python dependencies
+        run: |
+          pip install matplotlib numpy pandas
+      
+      - name: Create output directories
+        run: |
+          mkdir -p outputs
+          mkdir -p data/completed
+      
+      - name: Render videos
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import json
+          import os
+          import glob
+          import matplotlib.pyplot as plt
+          import matplotlib.animation as animation
+          import numpy as np
+          from datetime import datetime
+
+          def render_video(config_file):
+              """Render a single video from config"""
+              
+              with open(config_file, 'r') as f:
+                  config = json.load(f)
+              
+              video_id = config['id']
+              print(f"📹 Rendering: {config['title']}")
+              
+              # Create figure (9:16 for vertical video)
+              fig, ax = plt.subplots(figsize=(9, 16), dpi=90)
+              
+              # Dark theme
+              fig.patch.set_facecolor('#0a0a0a')
+              ax.set_facecolor('#0a0a0a')
+              ax.spines['top'].set_visible(False)
+              ax.spines['right'].set_visible(False)
+              ax.spines['left'].set_color('#444444')
+              ax.spines['bottom'].set_color('#444444')
+              ax.tick_params(colors='#cccccc', labelsize=14)
+              ax.grid(True, alpha=0.2, color='#444444')
+              
+              # Data
+              labels = config['data']['labels']
+              values = config['data']['values']
+              
+              # Title
+              ax.set_title(
+                  config['title'], 
+                  color='#ffffff', 
+                  fontsize=28, 
+                  pad=20, 
+                  weight='bold'
+              )
+              
+              # Source label
+              fig.text(
+                  0.5, 0.02, 
+                  f"Source: {config['source']}", 
+                  ha='center', 
+                  fontsize=12, 
+                  color='#888888'
+              )
+              
+              if config['chart_type'] == 'line':
+                  # Animated line chart
+                  line, = ax.plot([], [], color='#00D9FF', linewidth=4, marker='o', markersize=10)
+                  ax.set_xlim(-0.5, len(labels)-0.5)
+                  ax.set_ylim(min(values)*0.9, max(values)*1.1)
+                  ax.set_xticks(range(len(labels)))
+                  ax.set_xticklabels(labels)
+                  
+                  def animate_line(frame):
+                      line.set_data(range(frame+1), values[:frame+1])
+                      return line,
+                  
+                  anim = animation.FuncAnimation(
+                      fig, animate_line, frames=len(values), 
+                      interval=500, blit=True, repeat=False
+                  )
+                  
+              elif config['chart_type'] == 'bar':
+                  # Animated bar chart
+                  bars = ax.bar(labels, [0]*len(values), color='#FF6B6B', width=0.6)
+                  ax.set_ylim(0, max(values)*1.1)
+                  
+                  def animate_bar(frame):
+                      for bar, target in zip(bars, values):
+                          current = bar.get_height()
+                          new_height = current + (target - current) * 0.15
+                          bar.set_height(new_height)
+                      return bars
+                  
+                  anim = animation.FuncAnimation(
+                      fig, animate_bar, frames=80, 
+                      interval=33, blit=True, repeat=False
+                  )
+              
+              # Save animation
+              output_file = f"outputs/video_{video_id}.mp4"
+              print(f"Saving to: {output_file}")
+              
+              anim.save(
+                  output_file, 
+                  writer='ffmpeg', 
+                  fps=30,
+                  codec='libx264',
+                  extra_args=['-pix_fmt', 'yuv420p', '-preset', 'fast']
+              )
+              
+              plt.close()
+              print(f"✅ Video rendered: {output_file}")
+              
+              # Move config to completed
+              completed_path = config_file.replace('render_queue', 'completed')
+              os.makedirs(os.path.dirname(completed_path), exist_ok=True)
+              os.rename(config_file, completed_path)
+              
+              return output_file
+
+          # Process all queued videos
+          queue_files = glob.glob('data/render_queue/*.json')
+          
+          if not queue_files:
+              print("No videos to render")
+          else:
+              print(f"Found {len(queue_files)} videos to render")
+              
+              for config_file in queue_files:
+                  try:
+                      render_video(config_file)
+                  except Exception as e:
+                      print(f"Error rendering {config_file}: {e}")
+          PYTHON_SCRIPT
+      
+      - name: Upload rendered videos
+        uses: actions/upload-artifact@v3
+        with:
+          name: rendered-videos
+          path: outputs/*.mp4
+          retention-days: 7
+      
+      - name: Commit completed jobs
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add data/completed/
+          git add data/render_queue/
+          git diff --quiet && git diff --staged --quiet || git commit -m "Move completed render jobs"
+          git push
