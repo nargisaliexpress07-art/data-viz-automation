@@ -1,0 +1,24 @@
+{
+  "id": "20260131_091652",
+  "chart_type": "bar",
+  "title": "S&P 500 Performance",
+  "data": {
+    "labels": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ],
+    "values": [
+      4500,
+      4520,
+      4510,
+      4550,
+      4580
+    ]
+  },
+  "source": "Yahoo Finance",
+  "analysis": "The S&P 500 just went up by 30 points, rising from 4550 to 4580. This usually signals that large companies are doing well, which can lead to more jobs and better investment opportunities for everyday people.",
+  "created_at": "2026-01-31T09:16:52.216052"
+}
