@@ -23,18 +23,19 @@ class QueueManager:
         self.repo_path = os.path.expanduser('~/data-viz-automation')
         self.queue_path = os.path.join(self.repo_path, 'data/render_queue')
     
-    def create_render_job(self, data_point, analysis):
+def create_render_job(self, data_point, analysis):
         """Create a JSON config file for video rendering"""
         
         video_id = datetime.now().strftime('%Y%m%d_%H%M%S')
         
         config = {
             'id': video_id,
-            'chart_type': data_point.get('chart_type', 'line'),
+            'chart_type': data_point.get('chart_type', 'comparison'),
             'title': data_point['title'],
             'data': data_point['data'],
             'source': data_point['source'],
-            'analysis': analysis,
+            'category': data_point.get('category', 'market'),
+            'voiceover_script': analysis,  # ← GPT-generated script
             'created_at': datetime.now().isoformat()
         }
         
@@ -44,9 +45,7 @@ class QueueManager:
             json.dump(config, f, indent=2)
         
         print(f"✅ Created render job: {video_id}")
-        return video_id
-    
-    def push_to_github(self):
+        return video_id    def push_to_github(self):
         """Push queued jobs to GitHub (triggers Actions)"""
         
         os.chdir(self.repo_path)

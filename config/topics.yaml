@@ -1,0 +1,84 @@
+# Video Topics Configuration
+# The system will randomly select 3-5 topics per day
+
+crypto:
+  - symbol: "BTC"
+    name: "Bitcoin"
+    api: "coingecko"
+    enabled: true
+    
+  - symbol: "ETH"
+    name: "Ethereum"
+    api: "coingecko"
+    enabled: true
+    
+  - symbol: "SOL"
+    name: "Solana"
+    api: "coingecko"
+    enabled: true
+
+stocks:
+  - symbol: "SPY"
+    name: "S&P 500"
+    api: "yahoo"
+    enabled: true
+    
+  - symbol: "AAPL"
+    name: "Apple"
+    api: "yahoo"
+    enabled: true
+    
+  - symbol: "TSLA"
+    name: "Tesla"
+    api: "yahoo"
+    enabled: true
+    
+  - symbol: "NVDA"
+    name: "NVIDIA"
+    api: "yahoo"
+    enabled: true
+
+economic:
+  - id: "unemployment"
+    name: "US Unemployment Rate"
+    api: "fred"
+    enabled: true
+    
+  - id: "inflation"
+    name: "US Inflation (CPI)"
+    api: "fred"
+    enabled: true
+
+weather:
+  - city: "New York"
+    country: "US"
+    api: "openweather"
+    enabled: true
+    
+  - city: "Los Angeles"
+    country: "US"
+    api: "openweather"
+    enabled: false
+
+sports:
+  - league: "NBA"
+    api: "espn"
+    enabled: false
+    
+  - league: "NFL"
+    api: "espn"
+    enabled: false
+
+gaming:
+  - game: "Fortnite"
+    metric: "active_players"
+    api: "tracker"
+    enabled: false
+
+# Video Generation Settings
+settings:
+  videos_per_day: 5
+  video_style: "comparison"  # comparison or news
+  duration_seconds: 60
+  resolution: "1080x1920"  # vertical
+  voice: "en-US-AndrewNeural"

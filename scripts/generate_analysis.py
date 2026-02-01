@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate Analysis - Uses GPT-4 to create insights from data
+Generate Analysis - Creates comparison-style scripts
 """
 
 import openai
@@ -12,66 +12,82 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 
 def generate_analysis(data_point):
     """
-    Generate a 2-sentence analysis of the data
+    Generate news-style comparison script
     
     Args:
-        data_point: Dict with 'title', 'data', 'source'
+        data_point: Dict with 'title', 'data', 'source', 'category'
     
     Returns:
-        String with analysis
+        String with voiceover script
     """
     
-    # Extract key metrics
     title = data_point['title']
-    values = data_point['data']['values']
-    latest = values[-1]
-    previous = values[-2] if len(values) > 1 else latest
-    change = latest - previous
+    yesterday = data_point['data']['yesterday']
+    today = data_point['data']['today']
+    change = data_point['data']['change']
+    change_percent = data_point['data']['change_percent']
+    category = data_point.get('category', 'market')
     
-    # Create prompt for GPT
-    prompt = f"""You are an economic data analyst. Analyze this data briefly.
+    direction = "up" if change > 0 else "down"
+    
+    # Create prompt for comparison-style script
+    prompt = f"""You are an economic data analyst.Create a 15-20 second voiceover script for a YouTube Short.
 
-Data: {title}
-Latest value: {latest}
-Previous value: {previous}
-Change: {change:+.1f}
+Topic: {title}
+Category: {category}
+Yesterday: ${yesterday}
+Today: ${today}
+Change: {change_percent:+.2f}%
 
-Write exactly 2 sentences:
-1. State what happened (the change)
-2. Explain what this means for everyday people
+Style: News anchor delivering quick market update
+Tone: Professional but energetic
+Format: 
+- Start with attention grabber
+- State the comparison (yesterday vs today)
+- Quick insight on what it means
 
-Keep it simple, conversational, and under 50 words total.
-Do NOT use words like "furthermore", "moreover", or "in conclusion".
-Sound like a human explaining to a friend."""
+Keep it under 40 words. Sound human and excited.
+Do NOT use phrases like "Let's dive in" or "Stay tuned"."""
 
     try:
         response = openai.chat.completions.create(
-            model="gpt-4o-mini",  # Cheaper model
+            model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a data analyst who explains economics simply."},
+                {"role": "system", "content": "You are a financial news anchor writing quick market update scripts."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=100,
-            temperature=0.7
+            max_tokens=120,
+            temperature=0.8
         )
         
-        analysis = response.choices[0].message.content.strip()
-        return analysis
+        script = response.choices[0].message.content.strip()
+        
+        # Clean up quotes if any
+        script = script.replace('"', '').replace("'", '')
+        
+        return script
         
     except Exception as e:
         print(f"Error generating analysis: {e}")
-        # Fallback to simple template
-        direction = "increased" if change > 0 else "decreased"
-        return f"{title} {direction} to {latest}%. This could impact consumer spending and economic growth."
+        # Fallback template
+        if change > 0:
+            return f"{title} jumped {abs(change_percent):.1f}% today, moving from ${yesterday} to ${today}. Investors are watching closely as momentum builds."
+        else:
+            return f"{title} dropped {abs(change_percent):.1f}% today, falling from ${yesterday} to ${today}. Markets react to the latest developments."
 
 if __name__ == "__main__":
-    # Test with sample data
+    # Test
     test_data = {
-        'title': 'US Inflation Rate',
+        'title': 'Bitcoin Price Update',
+        'category': 'crypto',
         'data': {
-            'values': [3.4, 3.2, 3.5, 3.4, 3.3, 3.0]
+            'yesterday': 42000,
+            'today': 43500,
+            'change': 1500,
+            'change_percent': 3.57
         }
     }
     
-    analysis = generate_analysis(test_data)
-    print(f"Analysis: {analysis}")
+    script = generate_analysis(test_data)
+    print(f"Script: {script}")
+    print(f"\nWord count: {len(script.split())}")
