@@ -1,0 +1,15 @@
+{
+  "id": "20260201_142130",
+  "chart_type": "comparison",
+  "title": "Bitcoin Price Update",
+  "data": {
+    "yesterday": 82303.18,
+    "today": 78009,
+    "change": -4294.18,
+    "change_percent": -5.22
+  },
+  "source": "CoinGecko",
+  "category": "crypto",
+  "voiceover_script": "Breaking news in crypto! Bitcoins price has dipped to $78,009 today, down 5.22% from yesterdays $82,303. This pullback raises questions about market momentum as traders react to recent volatility. Keep an eye on those charts!",
+  "created_at": "2026-02-01T14:21:30.775465"
+}

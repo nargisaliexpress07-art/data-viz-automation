@@ -1,0 +1,15 @@
+{
+  "id": "20260201_142133",
+  "chart_type": "comparison",
+  "title": "US Inflation (CPI)",
+  "data": {
+    "yesterday": 3.2,
+    "today": 3.0,
+    "change": -0.2,
+    "change_percent": -6.25
+  },
+  "source": "Federal Reserve",
+  "category": "economic",
+  "voiceover_script": "Breaking news in inflation! The latest Consumer Price Index shows a drop from 3.2% yesterday to 3.0% today\u2014a significant decrease of 6.25%. This could signal easing price pressures, giving consumers a glimmer of hope for lower costs ahead!",
+  "created_at": "2026-02-01T14:21:33.744286"
+}

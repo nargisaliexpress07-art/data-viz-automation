@@ -1,0 +1,15 @@
+{
+  "id": "20260201_142132",
+  "chart_type": "comparison",
+  "title": "Ethereum Price Update",
+  "data": {
+    "yesterday": 2597.6,
+    "today": 2369.16,
+    "change": -228.44,
+    "change_percent": -8.79
+  },
+  "source": "CoinGecko",
+  "category": "crypto",
+  "voiceover_script": "Ethereum is experiencing a sharp drop! Yesterday, it closed at $2597.60, but today, its down to $2369.16\u2014an 8.79% decline. This dip could signal shifting market sentiment. Keep an eye on those trends!",
+  "created_at": "2026-02-01T14:21:32.179414"
+}

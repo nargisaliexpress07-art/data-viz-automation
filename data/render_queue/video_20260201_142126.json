@@ -1,0 +1,15 @@
+{
+  "id": "20260201_142126",
+  "chart_type": "comparison",
+  "title": "Apple Stock Update",
+  "data": {
+    "yesterday": 258.28,
+    "today": 259.48,
+    "change": 1.2,
+    "change_percent": 0.46
+  },
+  "source": "Yahoo Finance",
+  "category": "stocks",
+  "voiceover_script": "Apple stock is on the rise! Yesterday, it closed at $258.28, but today it\u2019s up to $259.48, a solid gain of 0.46%. This positive momentum reflects strong investor confidence in the tech giant.",
+  "created_at": "2026-02-01T14:21:26.091590"
+}
