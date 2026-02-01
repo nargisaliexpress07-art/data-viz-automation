@@ -26,14 +26,14 @@ jobs:
       
       - name: Install Python dependencies
         run: |
-          pip install matplotlib numpy pandas
+          pip install matplotlib numpy pandas gtts
       
       - name: Create output directories
         run: |
           mkdir -p outputs
           mkdir -p data/completed
       
-      - name: Render videos
+      - name: Render videos with voiceover
         run: |
           python3 << 'PYTHON_SCRIPT'
           import json
@@ -43,9 +43,22 @@ jobs:
           import matplotlib.animation as animation
           import numpy as np
           from datetime import datetime
+          from gtts import gTTS
+          import subprocess
+
+          def generate_voiceover(text, output_file):
+              """Generate voiceover using gTTS"""
+              try:
+                  tts = gTTS(text=text, lang='en', slow=False)
+                  tts.save(output_file)
+                  print(f"🎤 Voiceover created: {output_file}")
+                  return True
+              except Exception as e:
+                  print(f"Error generating voiceover: {e}")
+                  return False
 
           def render_video(config_file):
-              """Render a single video from config"""
+              """Render a comparison-style video with voiceover"""
               
               with open(config_file, 'r') as f:
                   config = json.load(f)
@@ -53,125 +66,70 @@ jobs:
               video_id = config['id']
               print(f"📹 Rendering: {config['title']}")
               
-              # Create figure (9:16 for vertical video)
-              fig, ax = plt.subplots(figsize=(9, 16), dpi=90)
+              # Step 1: Generate voiceover
+              audio_file = f"outputs/audio_{video_id}.mp3"
+              voiceover_script = config.get('voiceover_script', 'No script available')
               
-              # Dark theme
-              fig.patch.set_facecolor('#0a0a0a')
-              ax.set_facecolor('#0a0a0a')
-              ax.spines['top'].set_visible(False)
-              ax.spines['right'].set_visible(False)
-              ax.spines['left'].set_color('#444444')
-              ax.spines['bottom'].set_color('#444444')
-              ax.tick_params(colors='#cccccc', labelsize=14)
-              ax.grid(True, alpha=0.2, color='#444444')
+              if not generate_voiceover(voiceover_script, audio_file):
+                  print("Warning: Voiceover generation failed, creating silent video")
+                  audio_file = None
               
-              # Data
-              labels = config['data']['labels']
-              values = config['data']['values']
-              
-              # Title
-              ax.set_title(
-                  config['title'], 
-                  color='#ffffff', 
-                  fontsize=28, 
-                  pad=20, 
-                  weight='bold'
-              )
-              
-              # Source label
-              fig.text(
-                  0.5, 0.02, 
-                  f"Source: {config['source']}", 
-                  ha='center', 
-                  fontsize=12, 
-                  color='#888888'
-              )
-              
-              if config['chart_type'] == 'line':
-                  # Animated line chart
-                  line, = ax.plot([], [], color='#00D9FF', linewidth=4, marker='o', markersize=10)
-                  ax.set_xlim(-0.5, len(labels)-0.5)
-                  ax.set_ylim(min(values)*0.9, max(values)*1.1)
-                  ax.set_xticks(range(len(labels)))
-                  ax.set_xticklabels(labels)
-                  
-                  def animate_line(frame):
-                      line.set_data(range(frame+1), values[:frame+1])
-                      return line,
-                  
-                  anim = animation.FuncAnimation(
-                      fig, animate_line, frames=len(values), 
-                      interval=500, blit=True, repeat=False
+              # Get audio duration
+              audio_duration = 3.0
+              if audio_file and os.path.exists(audio_file):
+                  result = subprocess.run(
+                      ['ffprobe', '-v', 'error', '-show_entries', 
+                       'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', 
+                       audio_file],
+                      capture_output=True,
+                      text=True
                   )
-                  
-              elif config['chart_type'] == 'bar':
-                  # Animated bar chart
-                  bars = ax.bar(labels, [0]*len(values), color='#FF6B6B', width=0.6)
-                  ax.set_ylim(0, max(values)*1.1)
-                  
-                  def animate_bar(frame):
-                      for bar, target in zip(bars, values):
-                          current = bar.get_height()
-                          new_height = current + (target - current) * 0.15
-                          bar.set_height(new_height)
-                      return bars
-                  
-                  anim = animation.FuncAnimation(
-                      fig, animate_bar, frames=80, 
-                      interval=33, blit=True, repeat=False
-                  )
-              
-              # Save animation
-              output_file = f"outputs/video_{video_id}.mp4"
-              print(f"Saving to: {output_file}")
-              
-              anim.save(
-                  output_file, 
-                  writer='ffmpeg', 
-                  fps=30,
-                  codec='libx264',
-                  extra_args=['-pix_fmt', 'yuv420p', '-preset', 'fast']
-              )
-              
-              plt.close()
-              print(f"✅ Video rendered: {output_file}")
-              
-              # Move config to completed
-              completed_path = config_file.replace('render_queue', 'completed')
-              os.makedirs(os.path.dirname(completed_path), exist_ok=True)
-              os.rename(config_file, completed_path)
-              
-              return output_file
-
-          # Process all queued videos
-          queue_files = glob.glob('data/render_queue/*.json')
-          
-          if not queue_files:
-              print("No videos to render")
-          else:
-              print(f"Found {len(queue_files)} videos to render")
-              
-              for config_file in queue_files:
                   try:
-                      render_video(config_file)
-                  except Exception as e:
-                      print(f"Error rendering {config_file}: {e}")
-          PYTHON_SCRIPT
-      
-      - name: Upload rendered videos
-        uses: actions/upload-artifact@v4
-        with:
-          name: rendered-videos
-          path: outputs/*.mp4
-          retention-days: 7
-      
-      - name: Commit completed jobs
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git add data/completed/
-          git add data/render_queue/
-          git diff --quiet && git diff --staged --quiet || git commit -m "Move completed render jobs"
-          git push
+                      audio_duration = float(result.stdout.strip())
+                      print(f"Audio duration: {audio_duration:.2f}s")
+                  except:
+                      audio_duration = 3.0
+              
+              # Step 2: Create video
+              fig = plt.figure(figsize=(9, 16), dpi=120)
+              fig.patch.set_facecolor('#000000')
+              
+              # Get data
+              yesterday = config['data']['yesterday']
+              today = config['data']['today']
+              change_percent = config['data']['change_percent']
+              
+              # Colors
+              is_positive = change_percent > 0
+              main_color = '#00FF88' if is_positive else '#FF4444'
+              arrow = '↑' if is_positive else '↓'
+              
+              # Calculate frames
+              fps = 30
+              frames = int(audio_duration * fps)
+              
+              def animate(frame):
+                  plt.clf()
+                  fig.patch.set_facecolor('#000000')
+                  
+                  progress = frame / frames
+                  
+                  # Title
+                  title_alpha = min(1.0, progress * 3)
+                  plt.text(0.5, 0.85, config['title'], 
+                           ha='center', fontsize=32, color='white',
+                           weight='bold', alpha=title_alpha, 
+                           transform=fig.transFigure)
+                  
+                  # YESTERDAY
+                  if progress > 0.15:
+                      yesterday_alpha = min(1.0, (progress - 0.15) * 4)
+                      plt.text(0.5, 0.70, 'YESTERDAY', 
+                               ha='center', fontsize=18, color='#888888',
+                               alpha=yesterday_alpha, transform=fig.transFigure)
+                      plt.text(0.5, 0.62, f'${yesterday:,.2f}', 
+                               ha='center', fontsize=42, color='#CCCCCC',
+                               weight='bold', alpha=yesterday_alpha, 
+                               transform=fig.transFigure)
+                  
+                  # Arrow
